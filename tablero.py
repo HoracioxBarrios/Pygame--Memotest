@@ -10,7 +10,10 @@ def crear_tablero():
     Retorna un dict tablero
     '''
     tablero = {}
-    # COMPLETAR
+    tablero["tarjetas"] = generar_lista_tarjetas()
+    tablero["tiempo_ultimo_destape"] = pygame.time.get_ticks()
+    tablero["primer_tarjeta_seleccionada"] = None
+    tablero["segunda_tarjeta_seleccionada"] = None
     return tablero
 
 def generar_lista_tarjetas()->list:
@@ -20,7 +23,8 @@ def generar_lista_tarjetas()->list:
     El for y me recorre todas las posiciones de x usando de step el alto de la tarjeta
     Por ende me va a generar la cantidad de tarjetas que le especifique anteriormente 
     ajustandose a la resolución de mi pantalla de manera dinámica
-    Usa la función random.shuffle para generar de manera aleatoria los identificadores. Genera una lista de identificadores
+    Usa la función random.shuffle para generar de manera aleatoria los identificadores. Genera una 
+    lista de identificadores
     en donde se repiten dos veces el mismo ya que en un memotest se repiten dos veces la misma carta
     Retorna la lista de las tarjetas generadas
     '''
@@ -31,9 +35,9 @@ def generar_lista_tarjetas()->list:
 
     for x in range(0, CANTIDAD_TARJETAS_H * ANCHO_TARJETA, ANCHO_TARJETA):
         for y in range(0, CANTIDAD_TARJETAS_V * ALTO_TARJETA, ALTO_TARJETA):
-            pass
-            # COMPLETAR
-    
+            dicc_tarjeta = tarjeta.crear_tarjeta("0{0}.png".format(lista_id[indice]), indice, "00.png", x, y)
+            lista_tarjetas.append(dicc_tarjeta)
+            indice += 1
     return lista_tarjetas
 
 def generar_lista_ids_tarjetas():
@@ -49,8 +53,19 @@ def detectar_colision(tablero: dict, pos_xy: tuple) -> int  :
     Recibe como parametro el tablero y una tupla (X,Y)
     Retorna el identificador de la tarjeta que colisiono con el mouse y sino retorna None
     '''
-    pass
-    # COMPLETAR
+    tarjetas = tablero["tarjetas"]
+    for tarjeta in tarjetas:
+        if tarjeta["rectangulo"].collidepoint(pos_xy): 
+            if tablero["primer_tarjeta_seleccionada"] == None or tablero["segunda_tarjeta_seleccionada"] == None:
+                if tarjeta["visible"] == False:
+                    tarjeta["visible"] = True
+                    if tablero["primer_tarjeta_seleccionada"] == None:
+                        tablero["primer_tarjeta_seleccionada"] = tarjeta
+                    elif tablero["segunda_tarjeta_seleccionada"] == None:
+                        tablero["segunda_tarjeta_seleccionada"] = tarjeta
+                    tablero["tiempo_ultimo_destape"] = pygame.time.get_ticks()
+                    return tarjeta["identificador"]
+    
 
 def actualizar_tablero(tablero: dict) -> None:
     '''
@@ -58,7 +73,24 @@ def actualizar_tablero(tablero: dict) -> None:
     Recibe como parametro el tablero
     '''
     tiempo_actual = pygame.time.get_ticks()
-    # COMPLETAR
+    tiempo_transcurrido = tiempo_actual - tablero["tiempo_ultimo_destape"]
+    tarjetas = tablero["tarjetas"]
+    
+    if tiempo_transcurrido > TIEMPO_MOVIMIENTO:
+        tablero["tiempo_ultimo_destape"] = 0
+        for tarjeta in tarjetas:
+            if tarjeta["descubierto"] == False and tarjeta["visible"] == True:
+                tarjeta["visible"] = False
+        tablero["primer_tarjeta_seleccionada"] = None
+        tablero["segunda_tarjeta_seleccionada"] = None
+    if comprarar_tarjetas(tablero) == True:
+        tablero["primer_tarjeta_seleccionada"]["descubierto"] = True
+        tablero["segunda_tarjeta_seleccionada"]["descubierto"] = True
+        tablero["primer_tarjeta_seleccionada"]["visible"] = True            
+        tablero["segunda_tarjeta_seleccionada"]["visible"] = True
+
+
+
 
 def comprarar_tarjetas(tablero: dict) -> bool | None:
     '''
@@ -72,8 +104,11 @@ def comprarar_tarjetas(tablero: dict) -> bool | None:
         retorno = False
         if tablero["primer_tarjeta_seleccionada"]["identificador"] == tablero["segunda_tarjeta_seleccionada"]["identificador"]:
             tarjeta.descubrir_tarjetas(tablero["tarjetas"], tablero["primer_tarjeta_seleccionada"]["identificador"])
+            SONIDO_ACIERTO.play()
             retorno = True
-
+        else:
+            SONIDO_ERROR.play(1000)
+            SONIDO_ERROR.stop()
     return retorno
 
 def dibujar_tablero(tablero: dict, pantalla_juego: pygame.Surface):
@@ -81,6 +116,11 @@ def dibujar_tablero(tablero: dict, pantalla_juego: pygame.Surface):
     Dibuja todos los elementos del tablero en la superficie recibida como parametro
     Recibe como parametro el tablero y la ventana principal
     '''
-    pass
-    # COMPLETAR
+    lista_de_tarjetas = tablero["tarjetas"]
+    for tarjeta in lista_de_tarjetas:
+        if tarjeta["visible"] == True:
+            pantalla_juego.blit(tarjeta["superficie"], (tarjeta["rectangulo"].x, tarjeta["rectangulo"].y))
+        else:
+            pantalla_juego.blit(tarjeta["superficie_escondida"], (tarjeta["rectangulo"].x, tarjeta["rectangulo"].y))
+    
    

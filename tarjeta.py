@@ -2,21 +2,42 @@ import pygame
 from constantes import *
 
 
-def crear_tarjeta(nombre_imagen: str, identificador: int, nombre_imagen_escondida: str, x: int, y: int) -> dict:
+def crear_tarjeta(
+    nombre_imagen: str, identificador: int, nombre_imagen_escondida: str, x: int, y: int) -> dict:
     '''
     Crea una nueva tarjeta
-    Recibe como parametro el path donde estan los recursos, el nombre de la imagen y el tamaño que esta debera tener
+    Recibe como parametro el path donde estan los recursos, el nombre de la imagen y el 
+    tamaño que esta debera tener
     Retorna la tarjeta creada
     '''
     tarjeta = {}
-    # COMPLETAR
+    
+    tarjeta["superficie"] = pygame.image.load(
+        "{0}{1}".format(CARPETA_RECURSOS, nombre_imagen))
+    tarjeta["superficie"] = pygame.transform.scale(
+        tarjeta["superficie"],(ANCHO_TARJETA , ALTO_TARJETA))# img rescalada
+    
+    tarjeta["superficie_escondida"] = pygame.image.load(
+        "{0}{1}".format(CARPETA_RECURSOS, nombre_imagen_escondida))
+    tarjeta["superficie_escondida"] = pygame.transform.scale(
+        tarjeta["superficie_escondida"],(ANCHO_TARJETA, ALTO_TARJETA) ) #img rescalada
+    
+    tarjeta["visible"] = False
+    tarjeta["descubierto"] = False
+    tarjeta["identificador"] = identificador
+    
+    tarjeta["rectangulo"] = tarjeta["superficie"].get_rect()
+    tarjeta["rectangulo"].x = x
+    tarjeta["rectangulo"].y = y
+    
     return tarjeta
 
 
 def obtener_cantidad_tarjetas_por_estado(lista_tarjetas: list[dict], estado: bool) -> int:
     '''
         Obtiene la cantidad de tarjetas que esten visibles y que esten o no cubiertas
-        Recibe la lista de tarjetas y un estado (True o False) si es True me devuelve las cartas descubieras sino me devuelve las cubiertas.
+        Recibe la lista de tarjetas y un estado (True o False) si es True me devuelve las 
+        cartas descubieras sino me devuelve las cubiertas.
         Retorna dicha cantidad
     '''
     cantidad = 0
